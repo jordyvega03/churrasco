@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { HiShoppingCart } from "react-icons/hi";  // Importa el icono
+import ChurrasquinAssistant from "../components/ChurrasquinAssistant.tsx";
 
 interface Combo {
     id: number;
@@ -52,6 +54,12 @@ const Combos: React.FC = () => {
         setSelectedCombo(null);
     };
 
+    // Función para agregar al carrito y navegar a /venta
+    const handleAgregarCarrito = (combo: Combo, e: React.MouseEvent) => {
+        e.stopPropagation(); // Evita que se abra el modal al clicar el botón
+        navigate(`/venta?productoId=${combo.id}&tipo=combo`);
+    };
+
     return (
         <div className="p-8 max-w-5xl mx-auto bg-white rounded-2xl shadow-md">
             <button
@@ -76,7 +84,7 @@ const Combos: React.FC = () => {
                     {combos.map((c) => (
                         <div
                             key={c.id}
-                            className="cursor-pointer rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-lg transition flex flex-col items-center"
+                            className="cursor-pointer rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-lg transition flex flex-col items-center relative"
                             onClick={() => openModal(c)}
                             role="button"
                             tabIndex={0}
@@ -95,7 +103,16 @@ const Combos: React.FC = () => {
                             <p className="text-gray-700 mb-1 text-center">
                                 <strong>Tipo:</strong> {c.tipoCombo}
                             </p>
-                            <p className="text-pink-600 font-bold text-lg mt-auto">${c.precio.toFixed(2)}</p>
+                            <p className="text-pink-600 font-bold text-lg mt-auto">Q {c.precio.toFixed(2)}</p>
+
+                            {/* Botón agregar carrito */}
+                            <button
+                                onClick={(e) => handleAgregarCarrito(c, e)}
+                                className="absolute top-4 right-4 bg-pink-600 hover:bg-pink-700 text-white rounded-full p-2 shadow-lg"
+                                aria-label={`Agregar ${c.nombre} al carrito`}
+                            >
+                                <HiShoppingCart size={20} />
+                            </button>
                         </div>
                     ))}
                 </div>
@@ -162,21 +179,34 @@ const Combos: React.FC = () => {
                             </div>
 
                             <p className="text-pink-600 font-bold text-lg mt-4">
-                                Precio: ${selectedCombo.precio.toFixed(2)}
+                                Precio: Q {selectedCombo.precio.toFixed(2)}
                             </p>
                         </div>
 
-                        <div className="flex justify-end pt-6">
+                        <div className="flex justify-between pt-6">
                             <button
                                 onClick={closeModal}
                                 className="px-5 py-2 rounded-md bg-gray-300 hover:bg-gray-400"
                             >
                                 Cerrar
                             </button>
+
+                            <button
+                                onClick={() => {
+                                    navigate(`/venta?productoId=${selectedCombo.id}&tipo=combo`);
+                                    closeModal();
+                                }}
+                                className="px-5 py-2 rounded-md bg-pink-600 hover:bg-pink-700 text-white"
+                            >
+                                <HiShoppingCart className="inline-block mr-1" />
+                                Agregar al carrito
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
+
+            <ChurrasquinAssistant />
         </div>
     );
 };

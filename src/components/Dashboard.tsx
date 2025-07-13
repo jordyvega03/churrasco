@@ -1,5 +1,5 @@
 import React from "react";
-import { Line, Bar } from "react-chartjs-2";
+import { Line, Bar, Doughnut } from "react-chartjs-2";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -7,6 +7,7 @@ import {
     PointElement,
     LineElement,
     BarElement,
+    ArcElement,
     Title,
     Tooltip,
     Legend,
@@ -19,13 +20,14 @@ ChartJS.register(
     PointElement,
     LineElement,
     BarElement,
+    ArcElement,
     Title,
     Tooltip,
     Legend
 );
 
 const Dashboard: React.FC = () => {
-    // Datos para tarjetas
+    // Tarjetas resumen
     const stats = [
         { title: "Ventas Diarias", value: "Q1,200", icon: "💰" },
         { title: "Ventas Mensuales", value: "Q35,000", icon: "📅" },
@@ -33,23 +35,48 @@ const Dashboard: React.FC = () => {
         { title: "Desperdicios", value: "120 kg", icon: "🗑️" },
     ];
 
-    // Datos para gráfica de ventas diarias (line chart)
-    const lineData = {
+    // Ventas diarias y mensuales (líneas)
+    const ventasDiariasData = {
         labels: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
         datasets: [
             {
-                label: "Ventas diarias",
+                label: "Ventas Diarias",
                 data: [120, 190, 170, 220, 280, 300, 250],
                 borderColor: "#ec4899",
                 backgroundColor: "rgba(236, 72, 153, 0.3)",
                 fill: true,
                 tension: 0.4,
             },
+            {
+                label: "Ventas Mensuales (promedio diario)",
+                data: [150, 180, 160, 200, 260, 280, 240],
+                borderColor: "#f43f5e",
+                backgroundColor: "rgba(244, 63, 94, 0.3)",
+                fill: true,
+                tension: 0.4,
+            },
         ],
     };
 
-    // Datos para gráfica de top platos/dulces (bar chart)
-    const barData = {
+    const ventasDiariasOptions: ChartOptions<"line"> = {
+        responsive: true,
+        plugins: {
+            legend: { position: "top" },
+            title: {
+                display: true,
+                text: "Ventas Diarias y Mensuales",
+                font: { size: 18, weight: "bold" },
+                color: "#ec4899",
+            },
+        },
+        scales: {
+            y: { beginAtZero: true, grid: { color: "#f0f0f0" } },
+            x: { grid: { color: "#f0f0f0" } },
+        },
+    };
+
+    // Platos más vendidos (barras)
+    const platosMasVendidosData = {
         labels: ["Churrasco Familiar", "Churrasco Especial", "Canillitas", "Caja Dulces"],
         datasets: [
             {
@@ -60,50 +87,133 @@ const Dashboard: React.FC = () => {
         ],
     };
 
-    // Opciones para la nueva gráfica Ventas del Año
-    const ventasAnioData = {
-        labels: [
-            "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-            "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
-        ],
+    const platosMasVendidosOptions: ChartOptions<"bar"> = {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            title: {
+                display: true,
+                text: "Platos Más Vendidos",
+                font: { size: 18, weight: "bold" },
+                color: "#ec4899",
+            },
+        },
+        scales: {
+            y: { beginAtZero: true, grid: { color: "#f0f0f0" } },
+            x: { grid: { color: "#f0f0f0" } },
+        },
+    };
+
+    // Dulces más populares (barras)
+    const dulcesMasPopularesData = {
+        labels: ["Canillitas", "Caja Dulces", "Galletas", "Dulces Tradicionales"],
         datasets: [
             {
-                label: "Ventas del Año",
-                data: [1000, 1200, 900, 1400, 1700, 1600, 1800, 1900, 2100, 2200, 2300, 2500],
-                borderColor: "#ec4899",
-                backgroundColor: "rgba(236, 72, 153, 0.3)",
-                fill: true,
-                tension: 0.3,
+                label: "Ventas",
+                data: [100, 110, 90, 70],
+                backgroundColor: "#ec4899",
             },
         ],
     };
 
-    const ventasAnioOptions: ChartOptions<"line"> = {
+    const dulcesMasPopularesOptions: ChartOptions<"bar"> = {
         responsive: true,
-        maintainAspectRatio: false,
         plugins: {
-            legend: {
-                position: "top",
-                labels: {
-                    color: "#ec4899",
-                    font: { size: 14, weight: "bold" },
-                },
-            },
+            legend: { display: false },
             title: {
                 display: true,
-                text: "Ventas del Año",
+                text: "Dulces Más Populares",
+                font: { size: 18, weight: "bold" },
                 color: "#ec4899",
-                font: { size: 20, weight: "bold" },
             },
         },
         scales: {
-            y: {
-                beginAtZero: true,
-                grid: { color: "#f0f0f0" },
+            y: { beginAtZero: true, grid: { color: "#f0f0f0" } },
+            x: { grid: { color: "#f0f0f0" } },
+        },
+    };
+
+    // Combinaciones de guarniciones frecuentes (barras horizontales)
+    const guarnicionesData = {
+        labels: ["Frijoles + Tortillas", "Chile de Árbol + Cebollín", "Frijoles + Chirmol", "Tortillas + Cebollín"],
+        datasets: [
+            {
+                label: "Frecuencia",
+                data: [50, 40, 30, 20],
+                backgroundColor: "#f43f5e",
             },
-            x: {
-                grid: { color: "#f0f0f0" },
+        ],
+    };
+
+    const guarnicionesOptions: ChartOptions<"bar"> = {
+        indexAxis: "y",
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            title: {
+                display: true,
+                text: "Combinaciones de Guarniciones Frecuentes",
+                font: { size: 18, weight: "bold" },
+                color: "#ec4899",
             },
+        },
+        scales: {
+            x: { beginAtZero: true, grid: { color: "#f0f0f0" } },
+            y: { grid: { color: "#f0f0f0" } },
+        },
+    };
+
+    // Ganancias por categoría (doughnut)
+    const gananciasCategoriaData = {
+        labels: ["Churrascos", "Dulces", "Combos"],
+        datasets: [
+            {
+                label: "Ganancias",
+                data: [5000, 3000, 4500],
+                backgroundColor: ["#ec4899", "#f43f5e", "#fbb6ce"],
+            },
+        ],
+    };
+
+    const gananciasCategoriaOptions: ChartOptions<"doughnut"> = {
+        responsive: true,
+        plugins: {
+            legend: { position: "right" },
+            title: {
+                display: true,
+                text: "Ganancias por Categoría",
+                font: { size: 18, weight: "bold" },
+                color: "#ec4899",
+            },
+        },
+    };
+
+    // Desperdicios y mermas (barras)
+    const desperdiciosData = {
+        labels: ["Churrascos", "Dulces", "Combos"],
+        datasets: [
+            {
+                label: "Kg Desperdicio",
+                data: [50, 30, 40],
+                backgroundColor: "#ec4899",
+            },
+        ],
+    };
+
+    const desperdiciosOptions: ChartOptions<"bar"> = {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            title: {
+                display: true,
+                text: "Desperdicios y Mermas (kg)",
+                font: { size: 18, weight: "bold" },
+                color: "#ec4899",
+            },
+        },
+        scales: {
+            y: { beginAtZero: true, grid: { color: "#f0f0f0" } },
+            x: { grid: { color: "#f0f0f0" } },
         },
     };
 
@@ -128,17 +238,28 @@ const Dashboard: React.FC = () => {
             {/* Gráficas */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-white p-6 rounded-lg shadow" style={{ height: 300 }}>
-                    <Line data={lineData} />
+                    <Line data={ventasDiariasData} options={ventasDiariasOptions} />
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow" style={{ height: 300 }}>
-                    <Bar data={barData} />
+                    <Bar data={platosMasVendidosData} options={platosMasVendidosOptions} />
                 </div>
-            </div>
 
-            {/* Nueva gráfica Ventas del Año (100% ancho) */}
-            <div className="bg-white p-6 rounded-lg shadow" style={{ height: 300, width: "100%" }}>
-                <Line data={ventasAnioData} options={ventasAnioOptions} />
+                <div className="bg-white p-6 rounded-lg shadow" style={{ height: 300 }}>
+                    <Bar data={dulcesMasPopularesData} options={dulcesMasPopularesOptions} />
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow" style={{ height: 300 }}>
+                    <Bar data={guarnicionesData} options={guarnicionesOptions} />
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow" style={{ height: 300 }}>
+                    <Doughnut data={gananciasCategoriaData} options={gananciasCategoriaOptions} />
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow" style={{ height: 300 }}>
+                    <Bar data={desperdiciosData} options={desperdiciosOptions} />
+                </div>
             </div>
         </div>
     );

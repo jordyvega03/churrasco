@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { Link } from "react-router-dom";
+import ChurrasquinAssistant from "../components/ChurrasquinAssistant.tsx";
 
 const Home: FC = () => {
     return (
@@ -23,20 +24,19 @@ const Home: FC = () => {
                         { to: "/churrascos", title: "Churrascos", emoji: "🥩", description: "Gestión de platos y configuraciones." },
                         { to: "/dulces", title: "Dulces", emoji: "🍬", description: "Gestión de dulces y cajas." },
                         { to: "/combos", title: "Combos", emoji: "🧺", description: "Armado y edición de combos." },
-                        { to: "/llm", title: "IA/Asistente", emoji: "🤖", description: "Recomendaciones inteligentes y consultas." },
-                        { to: "/administracion", title: "Administración", emoji: "⚙️", description: "Dashboard e Inventario", colSpan: 2 },
-                    ].map(({ to, title, emoji, description, colSpan }) => (
+                        { to: "/administracion", title: "Administración", emoji: "⚙️", description: "Dashboard e Inventario"},
+                    ].map(({ to, title, emoji, description }) => (
                         <ModuleLink
                             key={to}
                             to={to}
                             title={title}
                             emoji={emoji}
                             description={description}
-                            colSpan={colSpan}
                         />
                     ))}
                 </div>
             </div>
+            <ChurrasquinAssistant />
         </main>
     );
 };

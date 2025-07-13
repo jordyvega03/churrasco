@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 interface InventarioItem {
-    _id?: string;
+    id?: string;
     nombreIngrediente: string;
     tipoIngrediente: string;
     cantidad: number;
@@ -11,12 +11,73 @@ interface InventarioItem {
 
 const API_URL = "http://localhost:5000/api/inventario";
 
+interface AlertProps {
+    message: string;
+    type?: "success" | "error";
+    onClose: () => void;
+}
+
+const Alert: React.FC<AlertProps> = ({ message, type = "success", onClose }) => {
+    return (
+        <div
+            className={`fixed top-6 right-6 z-50 px-4 py-3 rounded shadow-lg text-white font-semibold transition-opacity duration-300
+          ${type === "success" ? "bg-pink-600" : "bg-red-600"}`}
+            role="alert"
+            onClick={onClose}
+            style={{ cursor: "pointer" }}
+        >
+            {message}
+        </div>
+    );
+};
+
+interface ConfirmDialogProps {
+    message: string;
+    isOpen: boolean;
+    onConfirm: () => void;
+    onCancel: () => void;
+}
+
+const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
+                                                         message,
+                                                         isOpen,
+                                                         onConfirm,
+                                                         onCancel,
+                                                     }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            role="dialog"
+            aria-modal="true"
+        >
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full text-center shadow-lg">
+                <p className="mb-6 text-gray-800">{message}</p>
+                <div className="flex justify-center gap-4">
+                    <button
+                        onClick={onConfirm}
+                        className="px-4 py-2 rounded bg-pink-600 text-white hover:bg-pink-700 transition"
+                    >
+                        Aceptar
+                    </button>
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 rounded border border-pink-600 text-pink-600 hover:bg-pink-100 transition"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const Inventario: React.FC = () => {
     const [items, setItems] = useState<InventarioItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Modal states
     const [modalOpen, setModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<InventarioItem | null>(null);
     const [formData, setFormData] = useState<InventarioItem>({
@@ -25,6 +86,14 @@ const Inventario: React.FC = () => {
         cantidad: 0,
         unidad: "",
     });
+
+    // Alert state
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [alertType, setAlertType] = useState<"success" | "error">("success");
+
+    // Confirm dialog state
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
     useEffect(() => {
         fetchItems();
@@ -69,48 +138,71 @@ const Inventario: React.FC = () => {
         }));
     };
 
+    const showAlert = (message: string, type: "success" | "error" = "success") => {
+        setAlertMessage(message);
+        setAlertType(type);
+        setTimeout(() => {
+            setAlertMessage(null);
+        }, 4000);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
         try {
-            if (editingItem?._id) {
-                await axios.put(`${API_URL}/${editingItem._id}`, formData);
+            if (editingItem?.id) {
+                await axios.put(`${API_URL}/${editingItem.id}`, formData);
+                showAlert("Ingrediente actualizado correctamente", "success");
             } else {
                 await axios.post(API_URL, formData);
+                showAlert("Ingrediente agregado correctamente", "success");
             }
             await fetchItems();
             closeModal();
         } catch {
             setError("Error guardando inventario");
+            showAlert("Error guardando inventario", "error");
         }
         setLoading(false);
     };
 
-    const handleDelete = async (id?: string) => {
+    const askDelete = (id?: string) => {
         if (!id) {
-            alert("ID inválido para eliminar.");
+            showAlert("ID inválido para eliminar.", "error");
             return;
         }
-        const confirmDelete = window.confirm("¿Seguro que deseas eliminar este item?");
-        if (!confirmDelete) return;
+        setItemToDelete(id);
+        setConfirmOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
 
         setLoading(true);
         setError(null);
+        setConfirmOpen(false);
+
         try {
-            await axios.delete(`${API_URL}/${id}`);
+            await axios.delete(`${API_URL}/${itemToDelete}`);
             await fetchItems();
+            showAlert("Ingrediente eliminado correctamente", "success");
         } catch {
             setError("Error eliminando item");
+            showAlert("Error eliminando item", "error");
         }
         setLoading(false);
+        setItemToDelete(null);
+    };
+
+    const cancelDelete = () => {
+        setConfirmOpen(false);
+        setItemToDelete(null);
     };
 
     return (
-        <div className="p-8 max-w-5xl mx-auto bg-white rounded-2xl shadow-md">
-            <h1 className="text-3xl font-bold mb-8 text-center text-gray-900">
-                Inventario
-            </h1>
+        <div className="p-8 max-w-5xl mx-auto bg-white rounded-2xl shadow-md relative">
+            <h1 className="text-3xl font-bold mb-8 text-center text-gray-900">Inventario</h1>
 
             <div className="flex justify-end mb-6">
                 <button
@@ -130,21 +222,11 @@ const Inventario: React.FC = () => {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-pink-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-pink-700">
-                                Nombre
-                            </th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-pink-700">
-                                Tipo
-                            </th>
-                            <th className="px-6 py-3 text-right text-sm font-semibold text-pink-700">
-                                Cantidad
-                            </th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-pink-700">
-                                Unidad
-                            </th>
-                            <th className="px-6 py-3 text-center text-sm font-semibold text-pink-700">
-                                Acciones
-                            </th>
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-pink-700">Nombre</th>
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-pink-700">Tipo</th>
+                            <th className="px-6 py-3 text-right text-sm font-semibold text-pink-700">Cantidad</th>
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-pink-700">Unidad</th>
+                            <th className="px-6 py-3 text-center text-sm font-semibold text-pink-700">Acciones</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -156,19 +238,14 @@ const Inventario: React.FC = () => {
                             </tr>
                         )}
                         {items.map((item) => (
-                            <tr key={item.id} className="hover:bg-pink-50 transition-colors duration-200">
-                                <td className="px-6 py-4 whitespace-nowrap text-gray-800">
-                                    {item.nombreIngrediente}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-gray-800">
-                                    {item.tipoIngrediente}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-gray-800">
-                                    {item.cantidad}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-gray-800">
-                                    {item.unidad}
-                                </td>
+                            <tr
+                                key={item.id}
+                                className="hover:bg-pink-50 transition-colors duration-200"
+                            >
+                                <td className="px-6 py-4 whitespace-nowrap text-gray-800">{item.nombreIngrediente}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-gray-800">{item.tipoIngrediente}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-gray-800">{item.cantidad}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-gray-800">{item.unidad}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center space-x-3">
                                     <button
                                         onClick={() => openModal(item)}
@@ -177,7 +254,7 @@ const Inventario: React.FC = () => {
                                         Editar
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(item.id)}
+                                        onClick={() => askDelete(item.id)}
                                         className="px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-300"
                                     >
                                         Eliminar
@@ -208,9 +285,7 @@ const Inventario: React.FC = () => {
 
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <label className="block">
-                                <span className="text-sm font-medium text-gray-700">
-                                    Nombre Ingrediente
-                                </span>
+                                <span className="text-sm font-medium text-gray-700">Nombre Ingrediente</span>
                                 <input
                                     type="text"
                                     name="nombreIngrediente"
@@ -222,9 +297,7 @@ const Inventario: React.FC = () => {
                             </label>
 
                             <label className="block">
-                                <span className="text-sm font-medium text-gray-700">
-                                    Tipo Ingrediente
-                                </span>
+                                <span className="text-sm font-medium text-gray-700">Tipo Ingrediente</span>
                                 <input
                                     type="text"
                                     name="tipoIngrediente"
@@ -236,9 +309,7 @@ const Inventario: React.FC = () => {
                             </label>
 
                             <label className="block">
-                                <span className="text-sm font-medium text-gray-700">
-                                    Cantidad
-                                </span>
+                                <span className="text-sm font-medium text-gray-700">Cantidad</span>
                                 <input
                                     type="number"
                                     name="cantidad"
@@ -280,6 +351,23 @@ const Inventario: React.FC = () => {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* Confirmación personalizada */}
+            <ConfirmDialog
+                isOpen={confirmOpen}
+                message="¿Seguro que deseas eliminar este item?"
+                onConfirm={confirmDelete}
+                onCancel={cancelDelete}
+            />
+
+            {/* Alertas */}
+            {alertMessage && (
+                <Alert
+                    message={alertMessage}
+                    type={alertType}
+                    onClose={() => setAlertMessage(null)}
+                />
             )}
         </div>
     );

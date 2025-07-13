@@ -11,6 +11,7 @@ import AdminProductos from "./components/AdminProductos.tsx";
 import Inventario from './components/Inventario.tsx';
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute ';
+import Venta from './pages/Venta.tsx';
 
 export default function AppRoutes() {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -54,6 +55,7 @@ export default function AppRoutes() {
                 <Route path="/churrascos" element={<Churrascos />} />
                 <Route path="/dulces" element={<Dulces />} />
                 <Route path="/combos" element={<Combos />} />
+                <Route path="/venta" element={<Venta />} />
 
                 {/* Rutas protegidas con layout anidado */}
                 <Route

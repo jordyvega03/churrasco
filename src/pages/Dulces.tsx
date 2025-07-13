@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { HiShoppingCart } from "react-icons/hi";  // Importar icono carrito
+import ChurrasquinAssistant from "../components/ChurrasquinAssistant.tsx";
 
 interface Dulce {
     id: number;
@@ -10,7 +12,7 @@ interface Dulce {
     cantidadEnCaja: number;
     precio: number;
     tipo: string;
-    urlImagen?: string; // minúscula inicial, como viene en tu API
+    urlImagen?: string;
 }
 
 const API_URL = "http://localhost:5000/api/dulces";
@@ -51,6 +53,12 @@ const Dulces: React.FC = () => {
         setSelectedDulce(null);
     };
 
+    // Función para agregar al carrito y redirigir
+    const handleAgregarCarrito = (dulce: Dulce, e: React.MouseEvent) => {
+        e.stopPropagation(); // Evita que se abra el modal cuando clickeas el botón
+        navigate(`/venta?productoId=${dulce.id}&tipo=dulce`);
+    };
+
     return (
         <div className="p-8 max-w-5xl mx-auto bg-white rounded-2xl shadow-md">
             <button
@@ -75,7 +83,7 @@ const Dulces: React.FC = () => {
                     {dulces.map((d) => (
                         <div
                             key={d.id}
-                            className="cursor-pointer rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-lg transition flex flex-col items-center"
+                            className="cursor-pointer rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-lg transition flex flex-col items-center relative"
                             onClick={() => openModal(d)}
                             role="button"
                             tabIndex={0}
@@ -100,7 +108,16 @@ const Dulces: React.FC = () => {
                             <p className="text-gray-700 mb-1">
                                 <strong>Cantidad en Caja:</strong> {d.cantidadEnCaja}
                             </p>
-                            <p className="text-pink-600 font-bold text-lg mt-2">${d.precio.toFixed(2)}</p>
+                            <p className="text-pink-600 font-bold text-lg mt-2">Q {d.precio.toFixed(2)}</p>
+
+                            {/* Botón agregar carrito */}
+                            <button
+                                onClick={(e) => handleAgregarCarrito(d, e)}
+                                className="absolute top-4 right-4 bg-pink-600 hover:bg-pink-700 text-white rounded-full p-2 shadow-lg"
+                                aria-label={`Agregar ${d.nombre} al carrito`}
+                            >
+                                <HiShoppingCart size={20} />
+                            </button>
                         </div>
                     ))}
                 </div>
@@ -114,7 +131,7 @@ const Dulces: React.FC = () => {
                     aria-modal="true"
                     aria-labelledby="modalTitle"
                 >
-                    <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+                    <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg overflow-auto max-h-[80vh]">
                         {selectedDulce.urlImagen && (
                             <img
                                 src={selectedDulce.urlImagen}
@@ -141,21 +158,33 @@ const Dulces: React.FC = () => {
                                 <strong>Cantidad en Caja:</strong> {selectedDulce.cantidadEnCaja}
                             </p>
                             <p className="text-pink-600 font-bold text-lg mt-4">
-                                Precio: ${selectedDulce.precio.toFixed(2)}
+                                Precio: Q {selectedDulce.precio.toFixed(2)}
                             </p>
                         </div>
 
-                        <div className="flex justify-end pt-6">
+                        <div className="flex justify-between pt-6">
                             <button
                                 onClick={closeModal}
                                 className="px-5 py-2 rounded-md bg-gray-300 hover:bg-gray-400"
                             >
                                 Cerrar
                             </button>
+
+                            <button
+                                onClick={() => {
+                                    navigate(`/venta?productoId=${selectedDulce.id}&tipo=dulce`);
+                                    closeModal();
+                                }}
+                                className="px-5 py-2 rounded-md bg-pink-600 hover:bg-pink-700 text-white flex items-center gap-1"
+                            >
+                                <HiShoppingCart className="inline-block" />
+                                Agregar al carrito
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
+            <ChurrasquinAssistant />
         </div>
     );
 };

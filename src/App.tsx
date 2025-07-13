@@ -1,10 +1,13 @@
 import './App.css'
 import AppRoutes from "./routes.tsx";
+import {CartProvider} from "./components/CartContext.tsx";
 
 function App() {
 
     return (
-        <AppRoutes/>
+        <CartProvider>
+            <AppRoutes />
+        </CartProvider>
     )
 }
 

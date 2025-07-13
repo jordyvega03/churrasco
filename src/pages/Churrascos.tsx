@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { HiShoppingCart } from "react-icons/hi"; // Importa el icono de carrito
+import ChurrasquinAssistant from "../components/ChurrasquinAssistant.tsx";
 
 interface Churrasco {
     id: number;
@@ -12,7 +14,7 @@ interface Churrasco {
     churrascoGuarniciones: string[];
     precio: number;
     tipo: string;
-    urlImagen?: string; // Aquí el campo de imagen
+    urlImagen?: string;
 }
 
 const API_URL = "http://localhost:5000/api/churrascos";
@@ -24,6 +26,8 @@ const Churrascos: React.FC = () => {
 
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedChurrasco, setSelectedChurrasco] = useState<Churrasco | null>(null);
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchChurrascos();
@@ -51,7 +55,11 @@ const Churrascos: React.FC = () => {
         setSelectedChurrasco(null);
     };
 
-    const navigate = useNavigate();
+    // Función para manejar click en el botón "Carro"
+    const handleComprar = (churrascoId: number) => {
+        // Redirige a la página de ventas con el id del churrasco en query o params
+        navigate(`/venta?productoId=${churrascoId}`);
+    };
 
     return (
         <div className="p-8 max-w-5xl mx-auto bg-white rounded-2xl shadow-md">
@@ -78,7 +86,7 @@ const Churrascos: React.FC = () => {
                     {churrascos.map((c) => (
                         <div
                             key={c.id}
-                            className="cursor-pointer rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-lg transition flex flex-col items-center"
+                            className="relative cursor-pointer rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-lg transition flex flex-col items-center"
                             onClick={() => openModal(c)}
                             role="button"
                             tabIndex={0}
@@ -106,7 +114,20 @@ const Churrascos: React.FC = () => {
                             <p className="text-gray-700 mb-1">
                                 <strong>Porciones:</strong> {c.porciones}
                             </p>
-                            <p className="text-pink-600 font-bold text-lg mt-2">${c.precio.toFixed(2)}</p>
+                            <p className="text-pink-600 font-bold text-lg mt-2">Q {c.precio.toFixed(2)}</p>
+
+                            {/* Botón Carro en la card */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Evita que abra el modal también
+                                    handleComprar(c.id);
+                                }}
+                                className="absolute top-4 right-4 bg-pink-600 hover:bg-pink-700 text-white rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+                                aria-label={`Comprar ${c.nombre}`}
+                                title={`Comprar ${c.nombre}`}
+                            >
+                                <HiShoppingCart size={20} />
+                            </button>
                         </div>
                     ))}
                 </div>
@@ -120,7 +141,7 @@ const Churrascos: React.FC = () => {
                     aria-modal="true"
                     aria-labelledby="modalTitle"
                 >
-                    <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+                    <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg relative">
                         {selectedChurrasco.urlImagen && (
                             <img
                                 src={selectedChurrasco.urlImagen}
@@ -156,21 +177,34 @@ const Churrascos: React.FC = () => {
                                     : "Sin guarniciones"}
                             </p>
                             <p className="text-pink-600 font-bold text-lg mt-4">
-                                Precio: ${selectedChurrasco.precio.toFixed(2)}
+                                Precio: Q {selectedChurrasco.precio.toFixed(2)}
                             </p>
                         </div>
 
-                        <div className="flex justify-end pt-6">
-                            <button
-                                onClick={closeModal}
-                                className="px-5 py-2 rounded-md bg-gray-300 hover:bg-gray-400"
-                            >
-                                Cerrar
-                            </button>
-                        </div>
+                        {/* Botón Carro en modal */}
+                        <button
+                            onClick={() => handleComprar(selectedChurrasco.id)}
+                            className="mt-6 w-full bg-pink-600 hover:bg-pink-700 text-white rounded px-4 py-2 font-semibold"
+                            aria-label={`Comprar ${selectedChurrasco.nombre}`}
+                            title={`Comprar ${selectedChurrasco.nombre}`}
+                        >
+                            <HiShoppingCart className="inline-block mr-2" size={20} />
+                            Comprar
+                        </button>
+
+                        <button
+                            onClick={closeModal}
+                            className="absolute top-3 right-3 text-gray-600 hover:text-pink-600 focus:outline-none"
+                            aria-label="Cerrar modal"
+                            title="Cerrar"
+                        >
+                            ✕
+                        </button>
                     </div>
                 </div>
             )}
+
+            <ChurrasquinAssistant />
         </div>
     );
 };
